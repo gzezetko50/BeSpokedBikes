@@ -1,0 +1,68 @@
+    <script>
+        (function () {
+            // Immediately disable nav links on first render (until login is clicked or server says authenticated)
+            function setNavState(enabled) {
+                document.querySelectorAll('.nav-menu .nav-link').forEach(a => {
+                    const target = a.dataset.href;
+                    if (!enabled) {
+                        a.classList.add('disabled');
+                        a.setAttribute('href', '#');
+                        a.setAttribute('tabindex', '-1');
+                        a.setAttribute('aria-disabled', 'true');
+                    } else {
+                        if (target) a.setAttribute('href', target);
+                        a.classList.remove('disabled');
+                        a.removeAttribute('tabindex');
+                        a.removeAttribute('aria-disabled');
+                    }
+                });
+
+                const authBtn = document.getElementById('authButton');
+                if (authBtn) {
+                    if (!enabled) {
+                        authBtn.textContent = 'Log in';
+                        authBtn.setAttribute('href', authBtn.dataset.href || '/Account/Login');
+                    } else {
+                        authBtn.textContent = 'Log out';
+                        authBtn.setAttribute('href', authBtn.dataset.href || '/Account/Logout');
+                    }
+
+                    // clear flag when user clicks logout
+                    authBtn.addEventListener('click', function () {
+                        const href = authBtn.getAttribute('href') || '';
+                        if (href.indexOf('/Account/Logout') !== -1) {
+                            sessionStorage.removeItem('allowLinks');
+                        }
+                    });
+                }
+            }
+
+            // first-pass: ensure links are disabled immediately on render
+            setNavState(false);
+
+            // then compute the resolved enabled state and apply it
+            const allow = sessionStorage.getItem('allowLinks') === 'true';
+            const serverAuthEl = document.getElementById('loginSuccess');
+            const serverAuth = serverAuthEl ? serverAuthEl.dataset.isAuth === 'true' : false;
+
+            // Enable if client indicates login was clicked (allow) OR server reports authenticated
+            setNavState(allow || serverAuth);
+
+            // Show one-time login success message when appropriate
+            (function showOneTimeSuccess() {
+                const successEl = document.getElementById('loginSuccess');
+                if (!successEl) return;
+
+                const isAuth = successEl.dataset.isAuth === 'true';
+                const username = successEl.dataset.username || '';
+                const serverShow = successEl.dataset.showSuccess === 'true';
+
+                if ((isAuth && allow) || serverShow) {
+                    successEl.textContent = `${username} - Logged in successfully`;
+                    successEl.style.display = 'block';
+                    sessionStorage.removeItem('allowLinks');
+                    setTimeout(() => { successEl.style.display = 'none'; }, 4000);
+                }
+            })();
+        })();
+    </script>

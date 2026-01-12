@@ -1,0 +1,35 @@
+@page
+@model BeSpokedBikes.Pages.CustomersModel
+@{
+    ViewData["Title"] = "Customers";
+}
+
+<h2>Customers</h2>
+
+<table class="table table-hover" id="grid">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Start Date</th>
+            <th>Status Id</th>
+            <th>Address</th>
+            <th>Phone</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model.Customers)
+        {
+            <tr>
+                <td>@c.Id</td>
+                <td>@c.FirstName</td>
+                <td>@c.LastName</td>
+                <td>@(c.StartDate?.ToString("yyyy-MM-dd") ?? "")</td>
+                <td>@(c.StatusId?.ToString() ?? "")</td>
+                <td>@c.Address</td>
+                <td>@c.Phone</td>
+            </tr>
+        }
+    </tbody>
+</table>

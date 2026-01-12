@@ -1,0 +1,61 @@
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.tr-bg {
+    background-color: #f9f9f9;
+}
+
+.tr-hover:hover {
+    background-color: #f1f1f1;
+}
+
+.table {
+    background-color: #ffffff !important; /* force solid white */
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Header and cells fully opaque */
+.table thead th {
+    background-color: #f8f9fa !important;
+}
+
+.table tbody tr td {
+    background-color: #ffffff !important;
+}
+
+/* Hover rows still opaque */
+.table-hover tbody tr:hover td {
+    background-color: #f1f1f1 !important;
+}
+
+.grid-panel {
+    /* Add any specific styles for the grid panel here */
+    margin: 0 auto;
+    padding: 10px;
+    max-width: 1200px; /* Adjust as necessary */
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.15); /* makes it look "on top" */
+    border-radius: 4px;
+    margin-bottom: 16px;
+
+    background-color: #ffffff;      /* <<< solid white panel under the grid */
+}
+
+main.page-main {
+    flex: 1;
+    padding: 1rem;
+    overflow: auto;
+
+    /* background image only for main content area */
+    background-image: url("/images/background.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}

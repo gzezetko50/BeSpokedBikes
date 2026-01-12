@@ -1,0 +1,214 @@
+@page
+@model BeSpokedBikes.Pages.Sales.IndexModel
+@{
+    ViewData["Title"] = "Sales";
+}
+
+<h2>Sales</h2>
+
+<div class="mb-2">
+    <button class="btn btn-success" id="btnAdd">Add Sale</button>
+</div>
+
+<table class="table table-hover" id="salesGrid">
+    <thead>
+        <tr>
+            <th>Sale Id</th>
+            <th>Product Id</th>
+            <th>Salesperson</th>
+            <th>Customer</th>
+
+            <th>Product</th>
+
+            <th>Sales Date</th>
+            <th>Quantity</th>
+            <th>Unit Price</th>
+            <th>Total Price</th>
+            <th>Commission Amount</th>
+            <th>Status Id</th>
+            <th>Created Date</th>
+            <th>Modified Date</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var s in Model.Sales)
+    {
+        // build display names but fall back to Ids when names are missing
+        var salespersonName = string.IsNullOrWhiteSpace(s.SalespersonFirstName) && string.IsNullOrWhiteSpace(s.SalespersonLastName)
+            ? $"#{s.SalespersonId}"
+            : $"{s.SalespersonFirstName} {s.SalespersonLastName}";
+
+        var customerName = string.IsNullOrWhiteSpace(s.CustomerFirstName) && string.IsNullOrWhiteSpace(s.CustomerLastName)
+            ? $"#{s.CustomerId}"
+            : $"{s.CustomerFirstName} {s.CustomerLastName}";
+
+        <tr class="selectable"
+            data-id="@s.SaleId"
+            data-productid="@(s.ProductId.ToString())"
+            data-productname="@s.ProductName"
+            data-salespersonid="@(s.SalespersonId.ToString())"
+            data-salespersonname="@salespersonName"
+            data-customerid="@(s.CustomerId.ToString())"
+            data-customername="@customerName"
+            data-salesdate="@(s.SalesDate.ToString("yyyy-MM-dd"))"
+            data-quantity="@(s.Quantity.ToString())"
+            data-unitprice="@(s.UnitPrice.ToString("F2"))"
+            data-totalprice="@(s.TotalPrice.ToString("F2"))"
+            data-statusid="@(s.StatusId.ToString())"
+            data-created="@s.CreatedDate.ToString("u")"
+            data-modified="@(s.ModifiedDate.HasValue ? s.ModifiedDate.Value.ToString("u") : "")">
+            <td>@s.SaleId</td>
+            <td>@s.ProductId</td>
+            <td>@salespersonName</td>
+            <td>@($"#{s.CustomerId}")</td>
+
+            <td>@s.ProductName</td>
+
+            <td>@s.SalesDate.ToString("yyyy-MM-dd")</td>
+            <td>@s.Quantity</td>
+            <td>@s.UnitPrice.ToString("C")</td>
+            <td>@s.TotalPrice.ToString("C")</td>
+            <td>@s.CommissionAmount.ToString("C")</td>
+            <td>@s.StatusId</td>
+            <td>@s.CreatedDate.ToString("yyyy-MM-dd HH:mm")</td>
+            <td>@(s.ModifiedDate.HasValue ? s.ModifiedDate.Value.ToString("yyyy-MM-dd HH:mm") : "")</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<!-- Add/Edit Modal for Sale (same UX pattern as Salesperson) -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" id="modalForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editLabel">Manage Sale</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="Input.SaleId" id="Input_SaleId" />
+
+                    <div class="mb-2">
+                        <label class="form-label">Product</label>
+                        <input type="hidden" name="Input.ProductId" id="Input_ProductId" />
+                        <input type="text" name="Input.ProductName" id="Input_ProductName" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label">Salesperson</label>
+                        <input type="hidden" name="Input.SalespersonId" id="Input_SalespersonId" />
+                        <input type="text" name="Input.SalespersonName" id="Input_SalespersonName" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label">Customer</label>
+                        <input type="hidden" name="Input.CustomerId" id="Input_CustomerId" />
+                        <input type="text" name="Input.CustomerName" id="Input_CustomerName" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label">Sales Date</label>
+                        <input type="date" name="Input.SalesDate" id="Input_SalesDate" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" name="Input.Quantity" id="Input_Quantity" class="form-control" min="1" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label">Unit Price</label>
+                        <input type="number" step="0.01" name="Input.UnitPrice" id="Input_UnitPrice" class="form-control" min="0" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" formaction="?handler=Update"
+                            class="btn btn-primary d-none" id="btnUpdate">
+                        Update
+                    </button>
+                    <button type="submit" formaction="?handler=Delete"
+                            class="btn btn-danger d-none" id="btnDelete">
+                        Delete
+                    </button>
+                    <button type="submit" formaction="?handler=Create"
+                            class="btn btn-success d-none" id="btnCreate">
+                        Add
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const editModalEl = document.getElementById('editModal');
+            const editModal = new bootstrap.Modal(editModalEl);
+
+            const idInput = document.getElementById('Input_SaleId');
+            const productIdInput = document.getElementById('Input_ProductId');
+            const productNameInput = document.getElementById('Input_ProductName');
+            const salespersonIdInput = document.getElementById('Input_SalespersonId');
+            const salespersonNameInput = document.getElementById('Input_SalespersonName');
+            const customerIdInput = document.getElementById('Input_CustomerId');
+            const customerNameInput = document.getElementById('Input_CustomerName');
+            const salesDateInput = document.getElementById('Input_SalesDate');
+            const quantityInput = document.getElementById('Input_Quantity');
+            const unitPriceInput = document.getElementById('Input_UnitPrice');
+
+            const btnUpdate = document.getElementById('btnUpdate');
+            const btnDelete = document.getElementById('btnDelete');
+            const btnCreate = document.getElementById('btnCreate');
+
+            const showOnly = (button) => {
+                btnUpdate.classList.add('d-none');
+                btnDelete.classList.add('d-none');
+                btnCreate.classList.add('d-none');
+                button.classList.remove('d-none');
+            };
+
+            const clearForm = () => {
+                idInput.value = '';
+                productIdInput.value = '';
+                productNameInput.value = '';
+                salespersonIdInput.value = '';
+                salespersonNameInput.value = '';
+                customerIdInput.value = '';
+                customerNameInput.value = '';
+                salesDateInput.value = '';
+                quantityInput.value = 1;
+                unitPriceInput.value = '';
+            };
+
+            document.getElementById('btnAdd').addEventListener('click', () => {
+                clearForm();
+                document.getElementById('editLabel').textContent = 'Add Sale';
+                showOnly(btnCreate);
+                editModal.show();
+            });
+
+            // Optional: wire rows to open modal for edit/delete if needed in future
+            document.querySelectorAll('#salesGrid tbody tr').forEach(tr => {
+                tr.addEventListener('dblclick', () => {
+                    // Populate form from data-* attributes and show update by default
+                    idInput.value = tr.dataset.id || '';
+                    productIdInput.value = tr.dataset.productid || '';
+                    productNameInput.value = tr.dataset.productname || '';
+                    salespersonIdInput.value = tr.dataset.salespersonid || '';
+                    salespersonNameInput.value = tr.dataset.salespersonname || '';
+                    customerIdInput.value = tr.dataset.customerid || '';
+                    customerNameInput.value = tr.dataset.customername || '';
+                    salesDateInput.value = tr.dataset.salesdate || '';
+                    quantityInput.value = tr.dataset.quantity || 1;
+                    unitPriceInput.value = tr.dataset.unitprice || '';
+
+                    document.getElementById('editLabel').textContent = 'Update Sale';
+                    showOnly(btnUpdate);
+                    editModal.show();
+                });
+            });
+        })();
+    </script>
+}

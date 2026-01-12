@@ -1,0 +1,24 @@
+﻿@page
+@model BeSpokedBikes.Pages.IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+@if (TempData["Success"] is string success && !string.IsNullOrWhiteSpace(success))
+{
+    <div class="alert alert-success" role="alert">
+        @success
+    </div>
+}
+
+@if (!(User?.Identity?.IsAuthenticated ?? false) && string.IsNullOrWhiteSpace(TempData["Success"] as string))
+{
+    <div class="alert alert-warning" role="alert">
+        You need to log in to continue.
+        <a href="/Account/Login" class="alert-link">Go to Login</a>.
+    </div>
+}
+
+<div class="container">
+    <!-- Existing home content -->
+</div>

@@ -1,0 +1,57 @@
+@page
+@model BeSpokedBikes.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_Layout"; 
+}
+
+<div class="d-flex justify-content-center align-items-start mt-5">
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header text-center">Sign in</div>
+            <div class="card-body">
+                <!-- Normal form post to OnPostAsync (no AJAX). This guarantees the auth cookie is set by the server. -->
+                <form id="loginForm" method="post" autocomplete="on">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label asp-for="Input.Username" class="form-label"></label>
+                        <input asp-for="Input.Username" type="text" class="form-control" autocomplete="username" />
+                        <span asp-validation-for="Input.Username" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Input.Password" class="form-label"></label>
+                        <input asp-for="Input.Password" type="password" class="form-control" autocomplete="current-password" />
+                        <span asp-validation-for="Input.Password" class="text-danger"></span>
+                    </div>
+                    <div class="text-danger mb-2" id="loginError" style="display:none;">
+                        @* Server-side validation messages shown when ModelState is invalid *@
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            foreach (var entry in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <div>@entry.ErrorMessage</div>
+                            }
+                        }
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="loginBtn">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    @* No custom AJAX login script here. The form will POST to OnPostAsync which signs in the cookie and redirects. *@
+}
+
+<style>
+    /* Header and cells fully opaque */
+    .table thead th {
+        background-color: #f8f9fa !important;
+    }
+
+    .table tbody tr td {
+        background-color: #ffffff !important;
+    }
+</style>

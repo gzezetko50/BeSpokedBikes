@@ -1,0 +1,244 @@
+﻿@page
+@model BeSpokedBikes.Pages.SalespersonsModel
+@{
+    ViewData["Title"] = "Salespersons";
+}
+
+<div asp-validation-summary="All" class="text-danger mb-2"></div>
+<h2>Salespersons</h2>
+
+<div class="mb-2">
+    <button class="btn btn-success" id="btnAdd">Add Salesperson</button>
+</div>
+
+<table class="table table-hover" id="grid">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Address</th>        @* added back *@
+            <th>Phone</th>
+            <th>Start Date</th>
+            <th>Termination Date</th>
+            <th>Manager Id</th>
+            <th>Status Id</th>
+            <th>Created Date</th>
+            <th>Modified Date</th>
+            <th style="width:180px;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var s in Model.Salespersons)
+        {
+            <tr class="selectable" data-id="@s.Id"
+                data-first="@s.FirstName"
+                data-last="@s.LastName"
+                data-address="@s.Address"
+                data-phone="@FormatPhone(s.Phone)"
+                data-start="@s.StartDate.ToString("yyyy-MM-dd")"
+                data-termination="@(s.TerminationDate?.ToString("yyyy-MM-dd") ?? "")"
+                data-managerid="@(s.ManagerId?.ToString() ?? "")"
+                data-statusid="@(s.StatusId?.ToString() ?? "")"
+                data-created="@s.CreatedDate.ToString("u")"
+                data-modified="">
+                <td>@s.Id</td>
+                <td>@s.FirstName</td>
+                <td class="col-name">@s.LastName</td>
+                <td>@s.Address</td>   @* added back *@
+                <td>@s.Phone</td>
+                <td>@s.StartDate.ToString("yyyy-MM-dd")</td>
+                <td>@(s.TerminationDate?.ToString("yyyy-MM-dd") ?? "")</td>
+                <td>@(s.ManagerId?.ToString() ?? "")</td>
+                <td>@(s.StatusId?.ToString() ?? "")</td>
+                <td>@s.CreatedDate.ToString("u")</td>
+                <td>@s.ModifiedDate.ToString("u")</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-primary btn-edit">Update</button>
+                    <button type="button" class="btn btn-sm btn-danger btn-delete">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Edit/Add Modal: address + phone in the form -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" id="modalForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editLabel">Manage Salesperson</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="Input.Id" />
+                    <div class="mb-2">
+                        <label asp-for="Input.FirstName" class="form-label"></label>
+                        <input asp-for="Input.FirstName" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Input.LastName" class="form-label"></label>
+                        <input asp-for="Input.LastName" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Input.Address" class="form-label"></label>
+                        <input asp-for="Input.Address" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Input.Phone" class="form-label"></label>
+                        <input asp-for="Input.Phone" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Input.StartDate" class="form-label"></label>
+                        <input asp-for="Input.StartDate" type="date" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Input.TerminationDate" class="form-label"></label>
+                        <input asp-for="Input.TerminationDate" type="date" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Input.Manager" class="form-label"></label>
+                        <input asp-for="Input.Manager" class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" formaction="?handler=Update"
+                            class="btn btn-primary d-none" id="btnUpdate">
+                        Update
+                    </button>
+                    <button type="submit" formaction="?handler=Delete"
+                            class="btn btn-danger d-none" id="btnDelete">
+                        Delete
+                    </button>
+                    <button type="submit" formaction="?handler=Create"
+                            class="btn btn-success d-none" id="btnCreate">
+                        Add
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmDeleteText" class="mb-0"></p>
+            </div>
+            <div class="modal-footer">
+                <form method="post" id="confirmDeleteForm">
+                    <input type="hidden" name="Input.Id" id="confirmDeleteId" />
+                    <button type="submit" formaction="?handler=Delete" class="btn btn-danger" id="confirmDeleteYes">Yes</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const editModalEl = document.getElementById('editModal');
+            const editModal = new bootstrap.Modal(editModalEl);
+            const confirmModalEl = document.getElementById('confirmDeleteModal');
+            const confirmModal = new bootstrap.Modal(confirmModalEl);
+
+            const idInput = document.getElementById('Input_Id');
+            const firstInput = document.getElementById('Input_FirstName');
+            const lastInput = document.getElementById('Input_LastName');
+            const addressInput = document.getElementById('Input_Address');   // back
+            const phoneInput = document.getElementById('Input_Phone');
+            const startInput = document.getElementById('Input_StartDate');
+            const terminationInput = document.getElementById('Input_TerminationDate');
+            const managerInput = document.getElementById('Input_Manager');
+
+            const btnUpdate = document.getElementById('btnUpdate');
+            const btnDelete = document.getElementById('btnDelete');
+            const btnCreate = document.getElementById('btnCreate');
+
+            const confirmText = document.getElementById('confirmDeleteText');
+            const confirmId = document.getElementById('confirmDeleteId');
+
+            const showOnly = (button) => {
+                btnUpdate.classList.add('d-none');
+                btnDelete.classList.add('d-none');
+                btnCreate.classList.add('d-none');
+                button.classList.remove('d-none');
+            };
+
+            const fillFormFromRow = (tr) => {
+                idInput.value = tr.dataset.id || '';
+                firstInput.value = tr.dataset.first || '';
+                lastInput.value = tr.dataset.last || '';
+                addressInput.value = tr.dataset.address || '';   // back
+                phoneInput.value = tr.dataset.phone || '';
+                startInput.value = tr.dataset.start || '';
+                terminationInput.value = tr.dataset.termination || '';
+                managerInput.value = tr.dataset.managerid || '';
+            };
+
+            document.getElementById('btnAdd').addEventListener('click', () => {
+                idInput.value = '';
+                firstInput.value = '';
+                lastInput.value = '';
+                addressInput.value = '';   // clear
+                phoneInput.value = '';
+                startInput.value = '';
+                terminationInput.value = '';
+                managerInput.value = '';
+
+                document.getElementById('editLabel').textContent = 'Add Salesperson';
+                showOnly(btnCreate);
+                editModal.show();
+            });
+
+            document.querySelectorAll('#grid tbody tr').forEach(tr => {
+                const editBtn = tr.querySelector('.btn-edit');
+                const delBtn = tr.querySelector('.btn-delete');
+                const nameCell = tr.querySelector('.col-name');
+                const name = nameCell ? nameCell.textContent.trim() : 'this row';
+
+                editBtn.addEventListener('click', () => {
+                    fillFormFromRow(tr);
+                    document.getElementById('editLabel').textContent = 'Update Salesperson';
+                    showOnly(btnUpdate);
+                    editModal.show();
+                });
+
+                delBtn.addEventListener('click', () => {
+                    const id = tr.dataset.id || '';
+                    confirmId.value = id;
+                    confirmText.textContent = `Are you sure you want to delete "${name}"?`;
+                    confirmModal.show();
+                });
+            });
+        })();
+    </script>
+}
+
+@functions {
+    public string FormatPhone(string phone)
+    {
+        if (string.IsNullOrWhiteSpace(phone)) return "";
+        if (phone.StartsWith("+")) return phone;
+        var digits = new string(phone.Where(char.IsDigit).ToArray());
+        if (digits.Length == 10)
+            return $"({digits.Substring(0, 3)}) {digits.Substring(3, 3)}-{digits.Substring(6, 4)}";
+        return phone;
+    }
+}
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+</style>

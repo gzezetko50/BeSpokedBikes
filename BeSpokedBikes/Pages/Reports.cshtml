@@ -1,0 +1,74 @@
+@page
+@model BeSpokedBikes.Pages.ReportsModel
+@{
+    ViewData["Title"] = "Reports";
+}
+<h2>@Model.PageName</h2>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-auto">
+        <label class="form-label fw-bold fs-5">Year</label>
+        <select name="Year" class="form-select form-select-lg" aria-label="Select year">
+            @{
+                var current = DateTime.Now.Year;
+                for (int y = current - 2; y <= current + 1; y++)
+                {
+                    <option value="@y" selected="@(Model.Year == y ? "selected" : null)">@y</option>
+                }
+            }
+        </select>
+    </div>
+
+    <div class="col-auto">
+        <label class="form-label fw-bold fs-5">Quarter</label>
+        <select name="Quarter" class="form-select form-select-lg" aria-label="Select quarter">
+            @for (int q = 1; q <= 4; q++)
+            {
+                <option value="@q" selected="@(Model.Quarter == q ? "selected" : null)">Q@q</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-auto">
+        <button type="submit" class="btn btn-lg btn-primary">Refresh</button>
+    </div>
+</form>
+
+<div class="grid-panel bg-white">
+    @if (Model.Rows == null || Model.Rows.Count == 0)
+    {
+        <div class="alert alert-info mb-0">No sales found for @Model.Year Q@Model.Quarter.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Salesperson</th>
+                        <th class="text-end">Sales Count</th>
+                        <th class="text-end">Total Sales</th>
+                        <th class="text-end">Total Commission</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var idx = 1;
+                        foreach (var row in Model.Rows)
+                        {
+                            <tr>
+                                <td>@idx</td>
+                                <td>@row.Salesperson</td>
+                                <td class="text-end">@row.SalesCount</td>
+                                <td class="text-end">@row.TotalSales.ToString("C")</td>
+                                <td class="text-end">@row.TotalCommission.ToString("C")</td>
+                            </tr>
+                            idx++;
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

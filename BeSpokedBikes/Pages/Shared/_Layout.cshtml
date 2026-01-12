@@ -1,0 +1,392 @@
+﻿@{
+    var isAuth = User?.Identity?.IsAuthenticated == true;
+    var userName = User?.Identity?.Name ?? string.Empty;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - BeSpokedBikes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        html, body {
+            height: 100vh;
+            margin: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+
+            /* move the background image to the body */
+            background-image: url("/images/pexels-olly-1843752.jpg");
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .layout {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+        }
+
+        .side {
+            width: 220px;
+            border-right: 1px solid #ddd;
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        main.page-main {
+            flex: 1;
+            padding: 1rem;
+            overflow: auto;
+
+            /* let the body background image show through */
+            background-color: transparent;
+        }
+
+        .app-title-line {
+            font-size: 2.1rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+        }
+
+        .app-header {
+            background: linear-gradient(90deg, #4b5f7f, #4f7467);
+            color: #f8f9fa;
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+        }
+
+        .app-footer {
+            background-color: #4b5f7f;
+            color: #f8f9fa;
+        }
+
+        .app-footer a {
+            color: #e0b95a;
+            text-decoration: none;
+        }
+
+        .app-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Left navigation look & feel */
+        .side-title {
+            font-weight: 800;
+            font-size: 1.05rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #495057;
+        }
+
+        .side-title span {
+            display: inline-block;
+            padding-bottom: 0.15rem;
+            border-bottom: 2px solid #0d6efd;
+        }
+
+        .nav-menu .nav-link {
+            color: #343a40;
+            font-weight: 600;
+            padding-left: 0;
+        }
+
+        .nav-menu .nav-link:hover {
+            color: #0d6efd;
+        }
+
+        .nav-menu .nav-link.active {
+            color: #0d6efd;
+            font-weight: 700;
+        }
+
+        .table {
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        /* Header and cells fully opaque */
+        .table thead th {
+            background-color: #f8f9fa !important;
+        }
+
+        .table tbody tr td {
+            background-color: #ffffff !important;
+        }
+
+        /* Hover rows still opaque */
+        .table-hover tbody tr:hover td {
+            background-color: #f1f1f1 !important;
+        }
+
+        .grid-panel {
+            margin: 0 auto;
+            padding: 10px;
+            max-width: 1200px; /* Adjust as necessary */
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.15); /* makes it look "on top" */
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+
+        /* disabled nav link look */
+        .nav-link.disabled {
+            color: #6c757d !important;
+            pointer-events: none;
+            cursor: default;
+            opacity: 0.65;
+        }
+
+        /* logged-in success message next to auth button */
+        .login-success {
+            font-size: 0.85rem;
+            color: #d1e7dd; /* light success on dark header */
+            margin-top: 0; /* sits inline with the button */
+            text-align: center;
+
+            /* show full text on one line */
+            white-space: nowrap;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+
+            /* ensure full text is visible (no truncation) */
+            max-width: none;
+            overflow: visible;
+            text-overflow: clip;
+        }
+
+        /* ensure the auth area keeps items inline without changing button vertical size */
+        .auth-area {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            white-space: nowrap; /* prevent wrapping */
+            min-width: 0; /* allow container to shrink/grow naturally */
+        }
+
+        /* ensure the auth button never wraps and preserves its current vertical size */
+        #authButton {
+            white-space: nowrap; /* keep button text on one line */
+            display: inline-flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- top bar with title centered and Login on the right -->
+    <header class="app-header d-flex align-items-center border-bottom">
+        <div style="width: 120px;"></div>
+
+        <div class="flex-grow-1 text-center">
+            <div class="app-title-line">BeSpoked Bikes &mdash; Bicycle Shop</div>
+        </div>
+
+        <div class="me-3 text-end auth-area">
+            @* one-time success message placeholder. show when:
+               - AJAX flow set sessionStorage.allowLinks (client) AND server says user is authenticated, OR
+               - server set TempData["showSuccess"] after non-AJAX (full-post) login *@
+            <div id="loginSuccess" class="login-success"
+                 data-is-auth="@(isAuth.ToString().ToLower())"
+                 data-show-success="@(TempData["showSuccess"]?.ToString().ToLower() ?? "false")"
+                 data-username="@(TempData["username"]?.ToString() ?? userName)"></div>
+
+            <!-- Always show Login on the top-right as requested -->
+            <a id="authButton" class="btn btn-sm btn-light" asp-page="/Account/Login" data-href="@Url.Page("/Account/Login")">Log in</a>
+        </div>
+    </header>
+
+    <div class="layout">
+        <nav class="side px-3">
+            <h5 class="mb-3 side-title">
+                <span>Navigate</span>
+            </h5>
+            <ul class="nav flex-column nav-menu">
+                <li class="nav-item">
+                    @if (isAuth)
+                    {
+                        <a class="nav-link" asp-page="/Products" data-href="@Url.Page("/Products")">Products</a>
+                    }
+                    else
+                    {
+                        <a class="nav-link disabled" href="#" data-href="@Url.Page("/Products")" tabindex="-1" aria-disabled="true">Products</a>
+                    }
+                </li>
+                <li class="nav-item">
+                    @if (isAuth)
+                    {
+                        <a class="nav-link" asp-page="/Customers" data-href="@Url.Page("/Customers")">Customers</a>
+                    }
+                    else
+                    {
+                        <a class="nav-link disabled" href="#" data-href="@Url.Page("/Customers")" tabindex="-1" aria-disabled="true">Customers</a>
+                    }
+                </li>
+                <li class="nav-item">
+                    @if (isAuth)
+                    {
+                        <a class="nav-link" asp-page="/Salespersons" data-href="@Url.Page("/Salespersons")">Salespersons</a>
+                    }
+                    else
+                    {
+                        <a class="nav-link disabled" href="#" data-href="@Url.Page("/Salespersons")" tabindex="-1" aria-disabled="true">Salespersons</a>
+                    }
+                </li>
+                <li class="nav-item">
+                    @if (isAuth)
+                    {
+                        <a class="nav-link" asp-page="/Sales/Index" data-href="@Url.Page("/Sales/Index")">Sales</a>
+                    }
+                    else
+                    {
+                        <a class="nav-link disabled" href="#" data-href="@Url.Page("/Sales/Index")" tabindex="-1" aria-disabled="true">Sales</a>
+                    }
+                </li>
+                <li class="nav-item">
+                    @if (isAuth)
+                    {
+                        <a class="nav-link" asp-page="/Reports" data-href="@Url.Page("/Reports")">Reports</a>
+                    }
+                    else
+                    {
+                        <a class="nav-link disabled" href="#" data-href="@Url.Page("/Reports")" tabindex="-1" aria-disabled="true">Reports</a>
+                    }
+                </li>
+                <li class="nav-item mt-3">
+                    @* Logout is disabled because there is no working logout functionality yet *@
+                    <a class="btn btn-outline-secondary w-100 disabled" href="#" data-href="@Url.Page("/Account/Logout")" tabindex="-1" aria-disabled="true" role="button">Log out</a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="content">
+            <main role="main" class="page-main">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <footer class="app-footer border-top footer">
+        <div class="container py-2 text-center">
+            &copy; @DateTime.Now.Year - BeSpokedBikes -
+            <a asp-page="/Privacy">Privacy</a> |
+            <a asp-page="/Legal">Legal</a> |
+            <a asp-page="/Terms">Terms</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        (function () {
+            // helper: attach/remove a click-blocking handler on an element
+            function setLinkBlocked(a, blocked) {
+                if (blocked) {
+                    if (!a._disabledHandler) {
+                        a._disabledHandler = function (e) {
+                            e.preventDefault();
+                            e.stopImmediatePropagation();
+                        };
+                        a.addEventListener('click', a._disabledHandler, { capture: true });
+                    }
+                } else {
+                    if (a._disabledHandler) {
+                        a.removeEventListener('click', a._disabledHandler, { capture: true });
+                        a._disabledHandler = null;
+                    }
+                }
+            }
+
+            function setNavState(enabled) {
+                document.querySelectorAll('.nav-menu .nav-link').forEach(a => {
+                    const target = a.dataset.href;
+                    if (!enabled) {
+                        a.classList.add('disabled');
+                        a.setAttribute('href', '#');
+                        a.setAttribute('tabindex', '-1');
+                        a.setAttribute('aria-disabled', 'true');
+                        setLinkBlocked(a, true); // block clicks
+                    } else {
+                        if (target) a.setAttribute('href', target);
+                        a.classList.remove('disabled');
+                        a.removeAttribute('tabindex');
+                        a.removeAttribute('aria-disabled');
+                        setLinkBlocked(a, false); // restore clicks
+                    }
+                });
+
+                const authBtn = document.getElementById('authButton');
+                if (authBtn) {
+                    if (!enabled) {
+                        authBtn.textContent = 'Log in';
+                        authBtn.setAttribute('href', authBtn.dataset.href || '/Account/Login');
+                    } else {
+                        authBtn.textContent = 'Log out';
+                        authBtn.setAttribute('href', authBtn.dataset.href || '/Account/Logout');
+                    }
+
+                    authBtn.addEventListener('click', function () {
+                        const href = authBtn.getAttribute('href') || '';
+                        if (href.indexOf('/Account/Logout') !== -1) {
+                            sessionStorage.removeItem('allowLinks');
+                        }
+                    });
+                }
+            }
+
+            // read server-side auth state (rendered into DOM)
+            const serverAuthEl = document.getElementById('loginSuccess');
+            const serverAuth = serverAuthEl ? serverAuthEl.dataset.isAuth === 'true' : false;
+
+            // If server says user is not authenticated, clear any leftover client flag so links stay disabled
+            if (!serverAuth) {
+                sessionStorage.removeItem('allowLinks');
+            }
+
+            // first-pass: ensure links are disabled immediately on render
+            setNavState(false);
+
+            // then compute the resolved enabled state and apply it
+            const allow = sessionStorage.getItem('allowLinks') === 'true';
+
+            // NOTE: Fix — ensure initial page load defaults to "Log in" unless the server reports an authenticated user.
+            // Previously we honored the client-side session flag here which could leave the UI showing "Log out"
+            // on a fresh open. Only enable links when the server reports authenticated.
+            setNavState(serverAuth);
+
+            // Show one-time login success message when appropriate
+            (function showOneTimeSuccess() {
+                const successEl = document.getElementById('loginSuccess');
+                if (!successEl) return;
+
+                const isAuth = successEl.dataset.isAuth === 'true';
+                const username = successEl.dataset.username || '';
+                const serverShow = successEl.dataset.showSuccess === 'true';
+
+                if ((isAuth && allow) || serverShow) {
+                    successEl.textContent = `${username} - Logged in successfully`;
+                    successEl.style.display = 'block';
+                    sessionStorage.removeItem('allowLinks');
+                    setTimeout(() => { successEl.style.display = 'none'; }, 4000);
+                }
+            })();
+        })();
+    </script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,75 @@
+@page
+@model BeSpokedBikes.Pages.Sales.CreateModel
+@{
+    ViewData["Title"] = "Create Sale";
+}
+<h2>@Model.PageName</h2>
+
+<div class="grid-panel bg-white">
+    <form method="post" class="row g-3">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="col-md-4">
+            <label asp-for="Input.ProductId" class="form-label fw-semibold"></label>
+            <select asp-for="Input.ProductId" class="form-select">
+                @foreach (var p in Model.Products)
+                {
+                    <option value="@p.Id">@p.Name (@p.Id)</option>
+                }
+            </select>
+            <span asp-validation-for="Input.ProductId" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4">
+            <label asp-for="Input.SalespersonId" class="form-label fw-semibold"></label>
+            <select asp-for="Input.SalespersonId" class="form-select">
+                @foreach (var s in Model.Salespersons)
+                {
+                    var name = string.IsNullOrWhiteSpace(s.FirstName) && string.IsNullOrWhiteSpace(s.LastName)
+                        ? $"#{s.Id}"
+                        : $"{s.FirstName} {s.LastName}";
+                    <option value="@s.Id">@name</option>
+                }
+            </select>
+            <span asp-validation-for="Input.SalespersonId" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4">
+            <label asp-for="Input.CustomerId" class="form-label fw-semibold"></label>
+            <select asp-for="Input.CustomerId" class="form-select">
+                @foreach (var c in Model.Customers)
+                {
+                    var name = string.IsNullOrWhiteSpace(c.FirstName) && string.IsNullOrWhiteSpace(c.LastName)
+                        ? $"#{c.Id}"
+                        : $"{c.FirstName} {c.LastName}";
+                    <option value="@c.Id">@name</option>
+                }
+            </select>
+            <span asp-validation-for="Input.CustomerId" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-3">
+            <label asp-for="Input.SalesDate" class="form-label fw-semibold"></label>
+            <input asp-for="Input.SalesDate" class="form-control" type="date" value="@(Model.Input.SalesDate.ToString("yyyy-MM-dd"))" />
+            <span asp-validation-for="Input.SalesDate" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-3">
+            <label asp-for="Input.Quantity" class="form-label fw-semibold"></label>
+            <input asp-for="Input.Quantity" class="form-control" type="number" min="1" />
+            <span asp-validation-for="Input.Quantity" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-3">
+            <label asp-for="Input.UnitPrice" class="form-label fw-semibold"></label>
+            <input asp-for="Input.UnitPrice" class="form-control" type="number" step="0.01" min="0" />
+            <span asp-validation-for="Input.UnitPrice" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Create Sale</button>
+            <a asp-page="/Sales/Index" class="btn btn-secondary ms-2">Cancel</a>
+        </div>
+    </form>
+</div>

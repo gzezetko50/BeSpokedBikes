@@ -1,0 +1,215 @@
+@page
+@model BeSpokedBikes.Pages.ProductsModel
+@{
+    ViewData["Title"] = "Products";
+}
+
+<h2>Products</h2>
+
+<div class="mb-2">
+    <button class="btn btn-success" id="btnAdd">Add Product</button>
+</div>
+
+<table class="table table-hover" id="grid">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th class="col-name">Name</th>
+            <th>Manufacturer Id</th>
+            <th>Manufacturer</th>
+            <th>Style Id</th>
+            <th>Style</th>
+            <th>Purchase Price</th>
+            <th>Sale Price</th>
+            <th>Qty On Hand</th>
+            <th>Commission %</th>
+            <th>Status Id</th>
+            <th style="width:180px;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model.Products)
+        {
+            <tr class="selectable"
+                data-id="@p.Id"
+                data-name="@p.Name"
+                data-manufacturerid="@p.ManufacturerId"
+                data-manufacturer="@p.ManufacturerName"
+                data-styleid="@p.StyleId"
+                data-style="@p.StyleName"
+                data-purchase="@p.PurchasePrice"
+                data-sale="@p.SalePrice"
+                data-qty="@p.QtyOnHand"
+                data-commission="@p.CommissionPercentage"
+                data-statusid="@p.StatusId">
+                <td>@p.Id</td>
+                <td class="col-name">@p.Name</td>
+                <td>@p.ManufacturerId</td>
+                <td>@p.ManufacturerName</td>
+                <td>@p.StyleId</td>
+                <td>@p.StyleName</td>
+                <td>@p.PurchasePrice.ToString("C")</td>
+                <td>@p.SalePrice.ToString("C")</td>
+                <td>@p.QtyOnHand</td>
+                <td>@p.CommissionPercentage.ToString("0.##")</td>
+                <td>@p.StatusId</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-primary btn-edit">Update</button>
+                    <button type="button" class="btn btn-sm btn-danger btn-delete">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Manage Modal (unchanged) -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" id="productForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productLabel">Manage Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="Input.Id" />
+                    <div class="mb-2">
+                        <label asp-for="Input.Name" class="form-label"></label>
+                        <input asp-for="Input.Name" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Input.Manufacturer" class="form-label"></label>
+                        <input asp-for="Input.Manufacturer" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Input.Style" class="form-label"></label>
+                        <input asp-for="Input.Style" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Input.PurchasePrice" class="form-label"></label>
+                        <input asp-for="Input.PurchasePrice" type="number" step="0.01" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Input.SalePrice" class="form-label"></label>
+                        <input asp-for="Input.SalePrice" type="number" step="0.01" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Input.QtyOnHand" class="form-label"></label>
+                        <input asp-for="Input.QtyOnHand" type="number" class="form-control" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Input.CommissionPercentage" class="form-label"></label>
+                        <input asp-for="Input.CommissionPercentage" type="number" step="0.01" class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" formaction="?handler=Create" class="btn btn-success d-none" id="btnCreate">Add</button>
+                    <button type="submit" formaction="?handler=Update" class="btn btn-primary d-none" id="btnUpdate">Update</button>
+                    <button type="submit" formaction="?handler=Delete" class="btn btn-danger d-none" id="btnDelete">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmProductDeleteModal" tabindex="-1" aria-labelledby="confirmProductDeleteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmProductDeleteLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmProductDeleteText" class="mb-0"></p>
+            </div>
+            <div class="modal-footer">
+                <form method="post" id="confirmProductDeleteForm">
+                    <input type="hidden" name="Input.Id" id="confirmProductDeleteId" />
+                    <button type="submit" formaction="?handler=Delete" class="btn btn-danger" id="confirmProductDeleteYes">Yes</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const modalEl = document.getElementById('productModal');
+            const modal = new bootstrap.Modal(modalEl);
+            const confirmEl = document.getElementById('confirmProductDeleteModal');
+            const confirmModal = new bootstrap.Modal(confirmEl);
+
+            const idInput = document.getElementById('Input_Id');
+            const nameInput = document.getElementById('Input_Name');
+            const manInput = document.getElementById('Input_Manufacturer');
+            const styleInput = document.getElementById('Input_Style');
+            const purchaseInput = document.getElementById('Input_PurchasePrice');
+            const saleInput = document.getElementById('Input_SalePrice');
+            const qtyInput = document.getElementById('Input_QtyOnHand');
+            const commInput = document.getElementById('Input_CommissionPercentage');
+
+            const btnCreate = document.getElementById('btnCreate');
+            const btnUpdate = document.getElementById('btnUpdate');
+            const btnDelete = document.getElementById('btnDelete');
+
+            const confirmText = document.getElementById('confirmProductDeleteText');
+            const confirmId = document.getElementById('confirmProductDeleteId');
+
+            const showOnly = (button) => {
+                btnCreate.classList.add('d-none');
+                btnUpdate.classList.add('d-none');
+                btnDelete.classList.add('d-none');
+                button.classList.remove('d-none');
+            };
+
+            const fillForm = (tr) => {
+                idInput.value = tr.dataset.id || '';
+                nameInput.value = tr.dataset.name || '';
+                manInput.value = tr.dataset.manufacturer || '';
+                styleInput.value = tr.dataset.style || '';
+                purchaseInput.value = tr.dataset.purchase || '';
+                saleInput.value = tr.dataset.sale || '';
+                qtyInput.value = tr.dataset.qty || '';
+                commInput.value = tr.dataset.commission || '';
+            };
+
+            document.getElementById('btnAdd').addEventListener('click', () => {
+                idInput.value = '';
+                nameInput.value = '';
+                manInput.value = '';
+                styleInput.value = '';
+                purchaseInput.value = '';
+                saleInput.value = '';
+                qtyInput.value = '';
+                commInput.value = '';
+
+                document.getElementById('productLabel').textContent = 'Add Product';
+                showOnly(btnCreate);
+                modal.show();
+            });
+
+            document.querySelectorAll('#grid tbody tr').forEach(tr => {
+                const editBtn = tr.querySelector('.btn-edit');
+                const delBtn = tr.querySelector('.btn-delete');
+                const nameCell = tr.querySelector('.col-name');
+                const name = nameCell ? nameCell.textContent.trim() : 'this row';
+
+                editBtn.addEventListener('click', () => {
+                    fillForm(tr);
+                    document.getElementById('productLabel').textContent = 'Update Product';
+                    showOnly(btnUpdate);
+                    modal.show();
+                });
+
+                delBtn.addEventListener('click', () => {
+                    const id = tr.dataset.id || '';
+                    confirmId.value = id;
+                    confirmText.textContent = `Are you sure you want to delete "${name}"?`;
+                    confirmModal.show();
+                });
+            });
+        })();
+    </script>
+}
