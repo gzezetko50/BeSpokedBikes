@@ -132,7 +132,21 @@ namespace BeSpokedBikes.Services
         public async Task UpdateProductAsync(Product product, System.Threading.CancellationToken ct = default)
         {
             var resp = await _http.PutAsJsonAsync($"api/products/{product.Id}", product, ct);
-            resp.EnsureSuccessStatusCode();
+
+            if (!resp.IsSuccessStatusCode)
+            {
+                // Read response body so callers (UI) can show detailed API error text
+                var body = await resp.Content.ReadAsStringAsync(ct);
+
+                // Log for diagnostics if logger is available
+                _logger?.LogWarning("PUT api/products/{Id} returned {StatusCode}: {Body}", product.Id, (int)resp.StatusCode, body);
+
+                // Attach the raw API response body and status code to the exception so callers can inspect/parse it.
+                var ex = new System.Net.Http.HttpRequestException($"PUT api/products/{product.Id} returned {(int)resp.StatusCode} {resp.ReasonPhrase}: {body}");
+                ex.Data["ApiResponseBody"] = body;
+                ex.Data["StatusCode"] = (int)resp.StatusCode;
+                throw ex;
+            }
         }
 
         // Create product - used by pages that will create a product when not found
