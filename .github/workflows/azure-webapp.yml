@@ -1,0 +1,37 @@
+name: Build and deploy BeSpokedBikes to Azure Web App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 'BeSpokedBikes' # change to '.' if project is repo root
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish --configuration Release --no-build --output ./publish
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }} # ensure this secret exists or replace with the literal app name
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_088F57AC43344943A443BA1369FE28E0 }}
+          package: './publish'
