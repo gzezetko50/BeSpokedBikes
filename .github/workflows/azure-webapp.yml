@@ -4,13 +4,14 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: 'BeSpokedBikes' # change to '.' if project is repo root
+        working-directory: 'BeSpokedBikes' # project folder containing the .csproj
 
     steps:
       - uses: actions/checkout@v4
@@ -29,9 +30,16 @@ jobs:
       - name: Publish
         run: dotnet publish --configuration Release --no-build --output ./publish
 
+      - name: List publish output (debug)
+        run: |
+          echo "Workspace root: $GITHUB_WORKSPACE"
+          ls -la $GITHUB_WORKSPACE
+          ls -la $GITHUB_WORKSPACE/BeSpokedBikes
+          ls -la $GITHUB_WORKSPACE/BeSpokedBikes/publish
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: ${{ secrets.AZURE_WEBAPP_NAME }} # ensure this secret exists or replace with the literal app name
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_088F57AC43344943A443BA1369FE28E0 }}
-          package: './publish'
+          package: ${{ github.workspace }}/BeSpokedBikes/publish
