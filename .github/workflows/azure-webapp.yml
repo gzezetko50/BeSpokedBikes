@@ -30,16 +30,25 @@ jobs:
       - name: Publish
         run: dotnet publish --configuration Release --no-build --output ./publish
 
-      - name: List publish output (debug)
+      - name: Show publish output (debug)
         run: |
-          echo "Workspace root: $GITHUB_WORKSPACE"
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
           ls -la $GITHUB_WORKSPACE
           ls -la $GITHUB_WORKSPACE/BeSpokedBikes
           ls -la $GITHUB_WORKSPACE/BeSpokedBikes/publish
 
-      - name: Deploy to Azure Web App
+      - name: Zip publish output
+        run: |
+          cd $GITHUB_WORKSPACE/BeSpokedBikes
+          zip -r ../publish.zip ./publish
+        shell: bash
+
+      - name: Show zip (debug)
+        run: ls -la $GITHUB_WORKSPACE/publish.zip
+
+      - name: Deploy to Azure Web App (zip)
         uses: azure/webapps-deploy@v2
         with:
-          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_088F57AC43344943A443BA1369FE28E0 }}
-          package: ${{ github.workspace }}/BeSpokedBikes/publish
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}                             # must exist
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_088F57AC43344943A443BA1369FE28E0 }}  # or replace with your secret name
+          package: ${{ github.workspace }}/publish.zip
